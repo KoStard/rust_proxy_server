@@ -1,22 +1,19 @@
 use regex::Regex;
-use std::{
-    io::{Read, Write},
-    net::{TcpListener, TcpStream},
-};
+use tokio::net::{TcpListener, TcpStream};
 
 #[tokio::main]
-async fn main() -> std::io::Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:8080")?;
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let listener = TcpListener::bind("127.0.0.1:8080").await?;
 
-    // accept connections and process them serially
-    for stream in listener.incoming() {
-        let mut unwrapped_stream = stream?;
-        let res = handle_client(&mut unwrapped_stream).await;
-        if let Err(e) = res {
-            unwrapped_stream.write(format!("Error occured: {}\n", e).as_bytes())?;
-        }
+    loop {
+        let (mut stream, _) = listener.accept().await?;
+        tokio::spawn(async move {
+            let res = handle_client(&mut stream).await;
+            if let Err(e) = res {
+                stream.try_write(format!("Error occured: {}\n", e).as_bytes());
+            }
+        });
     }
-    Ok(())
 }
 
 
@@ -29,7 +26,7 @@ async fn handle_client(stream: &mut TcpStream) -> Result<(), String> {
     let mut overall_message = String::new();
     loop {
         let mut buffer = [0; MAX_BATCH_SIZE];
-        let count = stream.read(&mut buffer).map_err(|e| e.to_string())?;
+        let count = stream.try_read(&mut buffer).map_err(|e| e.to_string())?;
         let message = String::from_utf8_lossy(&buffer);
         let non_trimmed_length = message.len();
         let filler_trimmed_message = message.trim_end_matches(|c: char| c.eq(&'\u{0}'));
@@ -71,8 +68,9 @@ async fn handle_client(stream: &mut TcpStream) -> Result<(), String> {
     let result = reqwest::get(&url).await.map_err(|e| e.to_string())?;
 
     if result.status() == 200 {
+        println!("Sending {:?} bytes", result.content_length());
         stream
-            .write(&result.bytes().await.map_err(|e| e.to_string())?)
+            .try_write(&result.bytes().await.map_err(|e| e.to_string())?)
             .map_err(|e| e.to_string())?;
     } else {
         let generated_response = format!(
@@ -94,7 +92,7 @@ async fn handle_client(stream: &mut TcpStream) -> Result<(), String> {
             url
         );
         stream
-            .write(generated_response.as_bytes())
+            .try_write(generated_response.as_bytes())
             .map_err(|e| e.to_string())?;
     }
 
@@ -109,3 +107,5 @@ async fn handle_client(stream: &mut TcpStream) -> Result<(), String> {
 
     Ok(())
 }
+
+// TODO ip spoofing
