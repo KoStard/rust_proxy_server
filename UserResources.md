@@ -1,0 +1,2 @@
+- https://doc.rust-lang.org/std/net/struct.TcpListener.html
+- https://doc.rust-lang.org/stable/std/string/struct.String.html#method.from_utf8_lossy
