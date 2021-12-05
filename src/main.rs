@@ -12,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut promises = vec![];
 
     // Setting up UDP server
-    let socket = UdpSocket::bind("127.0.0.1:4000").await?;
+    let socket = UdpSocket::bind("0.0.0.0:4000").await?;
     let (request_sender, request_receiver) = mpsc::channel(100);
     let (response_sender, response_receiver) = mpsc::channel(100);
     promises.push(tokio::spawn(async move {
@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }));
 
     // Setting up TCP server
-    let tcp_listener = TcpListener::bind("127.0.0.1:4000").await?;
+    let tcp_listener = TcpListener::bind("0.0.0.0:4000").await?;
     promises.push(tokio::spawn(async move {
         tcp_server::TcpServer {
             listener: tcp_listener

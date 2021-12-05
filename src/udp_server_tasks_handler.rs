@@ -16,9 +16,7 @@ pub struct UdpServerTasksHandler {
 }
 
 impl UdpServerTasksHandler {
-    // TODO: Forward exceptions to the client
     pub async fn start(&mut self) {
-        // TODO check if you can trim the message directly with the bytes count from response
         while let Some((message, peer)) = self.request_receiver.recv().await {
             let response_sender = self.response_sender.clone();
             tokio::spawn(async move {
