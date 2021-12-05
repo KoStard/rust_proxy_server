@@ -8,6 +8,7 @@ mod tcp_server;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // TODO Allow defining the port from a CLI
     let mut promises = vec![];
 
     // Setting up UDP server

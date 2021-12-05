@@ -4,8 +4,6 @@ use reqwest::StatusCode;
 pub struct ProxyToolkit {}
 
 impl ProxyToolkit {
-    // TODO Connect + Accept handshake
-    // TODO BYE
     pub fn process_message(message: &str) -> Result<String, String> {
         let re = Regex::new(r"^GET:(?P<url>.+)$").unwrap();
         println!("The message is {}", message);
