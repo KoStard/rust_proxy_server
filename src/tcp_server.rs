@@ -1,6 +1,7 @@
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
-use crate::ProxyToolkit::ProxyToolkit;
+
+use crate::proxy_toolkit::ProxyToolkit;
 
 pub struct TcpServer {
     pub listener: TcpListener,
@@ -9,7 +10,7 @@ pub struct TcpServer {
 impl TcpServer {
     pub async fn start(&self) -> Result<(), Box<dyn std::error::Error>> {
         loop {
-            let (mut stream, _) = self.listener.accept().await?;
+            let (stream, _) = self.listener.accept().await?;
             tokio::spawn(Self::handle_tcp_client(stream));
         }
     }
@@ -17,7 +18,9 @@ impl TcpServer {
     async fn handle_tcp_client(mut stream: TcpStream) {
         let res = Self::process_communication(&mut stream).await;
         if let Err(e) = res {
-            stream.write(format!("Error occured: {}\n", e).as_bytes()).await;
+            if let Err(reporting_error) = stream.write(format!("Error occurred: {}\n", e).as_bytes()).await {
+                println!("Failed reporting about exception {}, got another exception: {}", e, reporting_error);
+            }
         }
     }
 
@@ -30,7 +33,6 @@ impl TcpServer {
             let mut buffer = [0; MAX_BATCH_SIZE];
             let count = stream.try_read(&mut buffer).map_err(|e| e.to_string())?;
             let message = String::from_utf8_lossy(&buffer[..count]);
-            let non_trimmed_length = message.len();
             let fully_trimmed_message = message.trim_end();
             overall_message.push_str(fully_trimmed_message);
 
@@ -54,7 +56,9 @@ impl TcpServer {
         // TODO url validation
 
         let message_to_send = ProxyToolkit::generate_content_to_send(&url).await?;
-        stream.write(message_to_send.as_slice()).await;
+        if let Err(e) = stream.write(message_to_send.as_slice()).await {
+            println!("Failed sending message: {}", e);
+        }
 
         Ok(())
     }

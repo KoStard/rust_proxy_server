@@ -10,11 +10,11 @@ impl ProxyToolkit {
         let re = Regex::new(r"^GET:(?P<url>.+)$").unwrap();
         println!("The message is {}", message);
         let cap = re.captures(message);
-        if cap.is_none() {
-            return Err("Invalid message structure! Use GET:URL format.\n".to_owned());
+        if let Some(capture) = cap {
+            Ok(capture["url"].to_owned())
+        } else {
+            Err("Invalid message structure! Use GET:URL format.\n".to_owned())
         }
-        let unwrapped_capture = cap.unwrap();
-        Ok(unwrapped_capture["url"].to_owned())
     }
 
     pub async fn generate_content_to_send(url: &str) -> Result<Vec<u8>, String> {
