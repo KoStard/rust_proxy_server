@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::net::{TcpListener, UdpSocket};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, RwLock};
 
 mod udp_server;
 mod udp_server_tasks_handler;
@@ -27,6 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         udp_server_tasks_handler::UdpServerTasksHandler {
             request_receiver,
             response_sender,
+            recent_batches: Arc::new(RwLock::new(HashMap::new())),
         }.start().await;
     }));
 

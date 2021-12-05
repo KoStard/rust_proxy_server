@@ -42,8 +42,13 @@ impl UdpServer {
         }
 
         while let Ok((buffer, peer)) = self.response_receiver.try_recv() {
-            if let Err(e) = self.socket.send_to(buffer.as_slice(), peer).await {
+            let resp = self.socket.send_to(buffer.as_slice(), peer).await;
+            if let Err(e) = resp {
                 println!("Failed sending response to the client: {}", e);
+            } else if let Ok(c) = resp {
+                if c != buffer.len() {
+                    panic!("Did not write everything down");
+                }
             }
             response_received = true;
         }

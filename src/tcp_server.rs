@@ -56,9 +56,14 @@ impl TcpServer {
     }
 
     async fn send_tcp_message(stream: &mut TcpStream, message: &[u8]) -> Result<(), String> {
-        stream.write(Self::add_headers(message).as_slice())
-            .await
-            .map_err(|e| format!("Failed sending TCP message: {}", e))?;
+        let buf = Self::add_headers(message);
+        let mut index = 0;
+        while index < buf.len() {
+            let count = stream.write(&buf[index..])
+                .await
+                .map_err(|e| format!("Failed sending TCP message: {}", e))?;
+            index += count;
+        }
         Ok(())
     }
 

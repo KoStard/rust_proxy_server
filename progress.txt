@@ -1,0 +1,2 @@
+Encountered issue that when the server is running in WSL and I run request that's going through the windows
+network, it's getting less bytes than it was expected.
