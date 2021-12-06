@@ -1,9 +1,9 @@
 use regex::Regex;
 use reqwest::StatusCode;
 
-pub struct ProxyToolkit {}
+pub struct ProxyLogic {}
 
-impl ProxyToolkit {
+impl ProxyLogic {
     pub fn process_message(message: &str) -> Result<String, String> {
         let re = Regex::new(r"^GET:(?P<url>.+)$").unwrap();
         println!("The message is {}", message);

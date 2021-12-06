@@ -1,12 +1,16 @@
+mod tcp;
+mod toolkit;
+
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::net::{TcpListener, UdpSocket};
+use tcp::custom_tcp_listener::CustomTcpListener;
+use tcp::tcp_server::TcpServer;
+use tokio::net::{UdpSocket};
 use tokio::sync::{mpsc, RwLock};
 
 mod udp_server;
 mod udp_server_tasks_handler;
-mod proxy_toolkit;
-mod tcp_server;
+mod proxy_logic;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,11 +38,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }));
 
     // Setting up TCP server
-    let tcp_listener = TcpListener::bind("0.0.0.0:4000").await?;
+    let tcp_listener = CustomTcpListener::new("0.0.0.0:4000".parse().unwrap()).await?;
     promises.push(tokio::spawn(async move {
-        tcp_server::TcpServer {
-            listener: tcp_listener
-        }.start().await.expect("TCP server failed running");
+        TcpServer {}.start(tcp_listener).await.expect("TCP server failed running");
     }));
 
     futures::future::join_all(promises).await;

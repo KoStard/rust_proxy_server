@@ -8,7 +8,7 @@ use regex::Regex;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::sync::RwLock;
 
-use crate::proxy_toolkit::ProxyToolkit;
+use crate::proxy_logic::ProxyLogic;
 
 const CONNECT_MESSAGE: &'static str = "Connect";
 const ACCEPT_RESPONSE: &'static str = "Accept";
@@ -92,9 +92,9 @@ impl UdpServerTasksHandler {
     }
 
     async fn process_with_failures_reporting_to_client(message: String, peer: SocketAddr, response_sender: Sender<(Vec<u8>, SocketAddr)>, recent_batches: Arc<RwLock<HashMap<(u32, SocketAddr), (u128, Vec<u8>)>>>) -> Result<(), String> {
-        let url = ProxyToolkit::process_message(&message.trim())
+        let url = ProxyLogic::process_message(&message.trim())
             .map_err(|e| format!("Invalid url, can't parse it: {}", e))?;
-        let message_to_send = ProxyToolkit::generate_content_to_send(&url).await
+        let message_to_send = ProxyLogic::generate_content_to_send(&url).await
             .map_err(|e| format!("Issue while loading the data from target server: {}", e))?;
         println!("Message to send has length {} and the peer is {}", message_to_send.len(), peer);
         Self::send_message_with_batches(message_to_send, peer, response_sender, recent_batches).await
