@@ -14,7 +14,7 @@ const CONNECT_MESSAGE: &'static str = "Connect";
 const ACCEPT_RESPONSE: &'static str = "Accept";
 const BYE_MESSAGE: &'static str = "BYE";
 const BYE_RESPONSE: &'static str = "BYE";
-const BUFFER_SIZE: usize = 10_000;
+const BUFFER_SIZE: usize = 500;
 
 pub struct UdpServerTasksHandler {
     request_receiver: Receiver<(String, SocketAddr)>,
@@ -83,9 +83,8 @@ impl UdpServerTasksHandler {
     }
 
     async fn process_with_failures_logging_on_server(message: String, peer: SocketAddr, response_sender: Sender<(Vec<u8>, SocketAddr)>, autocleaning_batches_cache: Arc<RwLock<AutocleaningBatchesCache>>) -> Result<(), String> {
-        if let Err(e) = Self::process_with_failures_reporting_to_client(message, peer, response_sender.clone(), autocleaning_batches_cache).await {
-            if let Err(reporting_error) = response_sender
-                .send((format!("Failed processing your request: {}", e).as_bytes().to_vec(), peer))
+        if let Err(e) = Self::process_with_failures_reporting_to_client(message, peer, response_sender.clone(), autocleaning_batches_cache.clone()).await {
+            if let Err(reporting_error) = Self::send_message_with_batches(format!("Failed processing your request: {}", e).into_bytes(), peer, response_sender, autocleaning_batches_cache)
                 .await {
                 return Err(format!("Failed sending to the queue: {}", reporting_error.to_string()));
             }

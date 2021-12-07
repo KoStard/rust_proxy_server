@@ -54,8 +54,10 @@ impl UdpServer {
 
         while let Ok((buffer, peer)) = self.response_receiver.try_recv() {
             response_received = true;
+            println!("Sending {} bytes", buffer.len());
             if let Err(exception_message) = self.socket.send_to(buffer.as_slice(), &peer).await {
-                self.report_failure(exception_message, peer).await;
+                // self.report_failure(exception_message, peer).await;
+                // This might harm more
             }
         }
         // Sleeping the thread to save resources in idle state
