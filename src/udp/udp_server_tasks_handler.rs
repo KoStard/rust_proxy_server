@@ -14,7 +14,7 @@ const CONNECT_MESSAGE: &'static str = "Connect";
 const ACCEPT_RESPONSE: &'static str = "Accept";
 const BYE_MESSAGE: &'static str = "BYE";
 const BYE_RESPONSE: &'static str = "BYE";
-const BUFFER_SIZE: usize = 500;
+const BUFFER_SIZE: usize = 1000;
 
 pub struct UdpServerTasksHandler {
     request_receiver: Receiver<(String, SocketAddr)>,
