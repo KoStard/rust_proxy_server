@@ -5,8 +5,6 @@ use tokio::net::TcpListener;
 
 use super::custom_tcp_stream::CustomTcpStream;
 
-const MAX_BATCH_SIZE: usize = 100;
-
 pub struct CustomTcpListener {
     listener: TcpListener,
 }

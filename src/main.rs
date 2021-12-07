@@ -1,15 +1,17 @@
-mod tcp;
-mod toolkit;
+use tokio::net::UdpSocket;
+use tokio::sync::mpsc;
 
-use std::collections::HashMap;
-use std::sync::Arc;
 use tcp::custom_tcp_listener::CustomTcpListener;
 use tcp::tcp_server::TcpServer;
-use tokio::net::{UdpSocket};
-use tokio::sync::{mpsc, RwLock};
 
-mod udp_server;
-mod udp_server_tasks_handler;
+use crate::udp::custom_udp_socket::CustomUdpSocket;
+use crate::udp::udp_server::UdpServer;
+use crate::udp::udp_server_tasks_handler::UdpServerTasksHandler;
+
+mod tcp;
+mod udp;
+mod toolkit;
+
 mod proxy_logic;
 
 #[tokio::main]
@@ -22,19 +24,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (request_sender, request_receiver) = mpsc::channel(100);
     let (response_sender, response_receiver) = mpsc::channel(100);
     promises.push(tokio::spawn(async move {
-        udp_server::UdpServer {
-            socket,
+        UdpServer::new(
+            CustomUdpSocket::new(socket),
             request_sender,
             response_receiver,
-        }.start().await;
+        ).start().await;
     }));
 
     promises.push(tokio::spawn(async move {
-        udp_server_tasks_handler::UdpServerTasksHandler {
+        UdpServerTasksHandler::new(
             request_receiver,
             response_sender,
-            recent_batches: Arc::new(RwLock::new(HashMap::new())),
-        }.start().await;
+        ).start().await;
     }));
 
     // Setting up TCP server

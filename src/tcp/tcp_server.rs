@@ -1,5 +1,3 @@
-use std::{io, net::SocketAddr};
-
 use crate::{proxy_logic::ProxyLogic, toolkit};
 
 use super::{custom_tcp_listener::CustomTcpListener, custom_tcp_stream::CustomTcpStream};
@@ -12,13 +10,11 @@ const BYE_RESPONSE: &'static str = "BYE";
 pub struct TcpServer {}
 
 impl TcpServer {
-    pub fn new() -> Self {
-        TcpServer {}
-    }
     pub async fn start(
-        mut self,
+        &self,
         listener: CustomTcpListener,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        println!("Starting the TCP server...");
         loop {
             let stream = listener.accept().await?;
             tokio::spawn(Self::handle_tcp_client(stream));
