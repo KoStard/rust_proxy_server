@@ -5,6 +5,7 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
 use crate::toolkit;
+use crate::udp::custom_protocol_processor::CustomProtocolProcessor;
 use crate::udp::custom_udp_socket::CustomUdpSocket;
 
 pub struct UdpServer {
@@ -20,7 +21,7 @@ impl UdpServer {
             socket,
             request_sender,
             response_receiver,
-            idle_loop_counter: 0
+            idle_loop_counter: 0,
         }
     }
     pub async fn start(&mut self) {
@@ -56,6 +57,7 @@ impl UdpServer {
             response_received = true;
             println!("Sending {} bytes", buffer.len());
             if let Err(exception_message) = self.socket.send_to(buffer.as_slice(), &peer).await {
+                println!("{}", exception_message);
                 // self.report_failure(exception_message, peer).await;
                 // This might harm more
             }
@@ -74,7 +76,7 @@ impl UdpServer {
 
     /// Trying to report failure to the client, if even the reporting fails, just logging
     async fn report_failure(&self, message: String, peer: SocketAddr) {
-        if let Err(reporting_failure_message) = self.socket.send_to(message.as_bytes(), &peer).await {
+        if let Err(reporting_failure_message) = self.socket.send_to(CustomProtocolProcessor::add_headers(message.as_bytes(), 0, 1).as_slice(), &peer).await {
             println!("Failed reporting to the client with message {} about another failure: {}", reporting_failure_message, message);
         }
     }
